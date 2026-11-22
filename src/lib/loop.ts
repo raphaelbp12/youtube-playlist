@@ -38,3 +38,12 @@ export function finishPlay(playsDone: number, repeats: number): number {
   const done = playsDone + 1
   return done >= repeats ? 0 : done
 }
+
+/**
+ * Whether playback has reached the end of the section. At the end of the
+ * video YouTube reports `ended` before the time reaches `end`, so that counts
+ * too.
+ */
+export function hasReachedEnd(state: 'playing' | 'ended' | 'other', time: number, end: number): boolean {
+  return state === 'ended' || (state === 'playing' && time >= end)
+}
