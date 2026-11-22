@@ -39,6 +39,11 @@ export function finishPlay(playsDone: number, repeats: number): number {
   return done >= repeats ? 0 : done
 }
 
+/** Plays done after playback reaches the end. A jump caused by a range change (`counted` false) is not a finished play. */
+export function playsAfterEnd(counted: boolean, playsDone: number, repeats: number): number {
+  return counted ? finishPlay(playsDone, repeats) : playsDone
+}
+
 /**
  * Whether playback has reached the end of the section. At the end of the
  * video YouTube reports `ended` before the time reaches `end`, so that counts
