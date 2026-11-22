@@ -6,6 +6,7 @@ import { useLoop } from './hooks/useLoop'
 import { useYouTubePlayer } from './hooks/useYouTubePlayer'
 import { clampRange, shouldSeekToStart, type LoopRange } from './lib/loop'
 import { buildShareParams, readShareParams } from './lib/shareUrl'
+import { createUrlWriter } from './lib/urlSync'
 
 const initial = readShareParams(window.location.search)
 
@@ -25,10 +26,24 @@ function App() {
   const shareParams = videoId ? buildShareParams(videoId, loopRange ?? range, repeats) : ''
   const shareUrl = `${window.location.origin}${window.location.pathname}${shareParams}`
 
-  // Keep the page URL shareable.
+  // Keep the page URL shareable. Writes are debounced: browsers rate-limit replaceState.
+  const [urlWriter] = useState(() => createUrlWriter((p) => window.history.replaceState(null, '', p)))
   useEffect(() => {
-    if (shareParams) window.history.replaceState(null, '', shareParams)
-  }, [shareParams])
+    if (shareParams) urlWriter.schedule(shareParams)
+  }, [shareParams, urlWriter])
+  // Write any pending value when the page is hidden or the app unmounts.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') urlWriter.flush()
+    }
+    window.addEventListener('pagehide', urlWriter.flush)
+    document.addEventListener('visibilitychange', onHide)
+    return () => {
+      window.removeEventListener('pagehide', urlWriter.flush)
+      document.removeEventListener('visibilitychange', onHide)
+      urlWriter.flush()
+    }
+  }, [urlWriter])
 
   // Jump to the new start whenever the user moves it, so they hear the loop point.
   const committedStart = useRef(range?.start)
