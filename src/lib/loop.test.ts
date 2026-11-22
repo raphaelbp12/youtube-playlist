@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampRange, clampRepeats, finishPlay, hasReachedEnd, shouldSeekToStart } from './loop'
+import { clampRange, clampRepeats, finishPlay, hasReachedEnd, playsAfterEnd, shouldSeekToStart } from './loop'
 
 describe('clampRange', () => {
   it('keeps a valid range', () => {
@@ -75,5 +75,19 @@ describe('shouldSeekToStart', () => {
 
   it('seeks when the start changed', () => {
     expect(shouldSeekToStart(0, 12)).toBe(true)
+  })
+})
+
+describe('playsAfterEnd', () => {
+  it('counts a finished play', () => {
+    expect(playsAfterEnd(true, 0, 3)).toBe(1)
+    expect(playsAfterEnd(true, 1, 3)).toBe(2)
+    expect(playsAfterEnd(true, 2, 3)).toBe(0)
+    expect(playsAfterEnd(true, 0, 1)).toBe(0)
+  })
+
+  it('does not count a jump caused by a range change', () => {
+    expect(playsAfterEnd(false, 0, 3)).toBe(0)
+    expect(playsAfterEnd(false, 1, 3)).toBe(1)
   })
 })
