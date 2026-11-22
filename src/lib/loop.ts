@@ -38,3 +38,16 @@ export function finishPlay(playsDone: number, repeats: number): number {
   const done = playsDone + 1
   return done >= repeats ? 0 : done
 }
+
+/**
+ * Whether the loop should jump back. A video that ends stops playing instead
+ * of passing `range.end`, so the ended state counts as reaching the end.
+ */
+export function reachedEnd(
+  ended: boolean,
+  playing: boolean,
+  currentTime: number,
+  range: LoopRange,
+): boolean {
+  return ended || (playing && currentTime >= range.end)
+}

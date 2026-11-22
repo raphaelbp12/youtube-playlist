@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampRange, clampRepeats, finishPlay } from './loop'
+import { clampRange, clampRepeats, finishPlay, reachedEnd } from './loop'
 
 describe('clampRange', () => {
   it('keeps a valid range', () => {
@@ -35,5 +35,22 @@ describe('finishPlay', () => {
     expect(finishPlay(0, 3)).toBe(1)
     expect(finishPlay(1, 3)).toBe(2)
     expect(finishPlay(2, 3)).toBe(0)
+  })
+})
+
+describe('reachedEnd', () => {
+  const range = { start: 10, end: 20 }
+
+  it('is true once playback passes the end', () => {
+    expect(reachedEnd(false, true, 20, range)).toBe(true)
+    expect(reachedEnd(false, true, 19, range)).toBe(false)
+  })
+
+  it('is true when the video ended, even if the time is short of the end', () => {
+    expect(reachedEnd(true, false, 19.9, range)).toBe(true)
+  })
+
+  it('ignores time while not playing', () => {
+    expect(reachedEnd(false, false, 25, range)).toBe(false)
   })
 })
