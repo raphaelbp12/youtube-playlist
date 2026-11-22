@@ -1,6 +1,7 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useReducer, useRef } from 'react'
 import { loadYouTubeApi } from '../lib/loadYouTubeApi'
 import { needsFractionalSeek, playerStartParam } from '../lib/playerStart'
+import { initialPlayerState, playerReducer } from '../lib/playerState'
 
 const ERROR_MESSAGES: Record<number, string> = {
   2: 'That video ID is not valid.',
@@ -22,9 +23,7 @@ interface Options {
  */
 export function useYouTubePlayer({ videoId, startAt }: Options) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [player, setPlayer] = useState<YT.Player | null>(null)
-  const [duration, setDuration] = useState(0)
-  const [error, setError] = useState<string | null>(null)
+  const [{ player, duration, error }, dispatch] = useReducer(playerReducer, initialPlayerState)
 
   // Only read when a new video loads, so it doesn't recreate the player.
   const getStartAt = useEffectEvent(() => startAt)
@@ -35,9 +34,7 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
 
     let cancelled = false
     let instance: YT.Player | null = null
-    setPlayer(null)
-    setDuration(0)
-    setError(null)
+    dispatch({ type: 'reset' })
 
     loadYouTubeApi()
       .then((api) => {
@@ -57,21 +54,26 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
               const length = event.target.getDuration()
               if (length > 0) {
                 if (needsFractionalSeek(initialStart)) event.target.seekTo(initialStart, true)
-                setDuration(length)
-                setPlayer(event.target)
+                dispatch({ type: 'ready', player: event.target, duration: length })
               } else {
-                setError('Live streams are not supported because they have no fixed length.')
+                dispatch({
+                  type: 'error',
+                  message: 'Live streams are not supported because they have no fixed length.',
+                })
               }
             },
             onError: (event) => {
               if (cancelled) return
-              setError(ERROR_MESSAGES[event.data] ?? 'This video could not be played.')
+              dispatch({
+                type: 'error',
+                message: ERROR_MESSAGES[event.data] ?? 'This video could not be played.',
+              })
             },
           },
         })
       })
       .catch((err: Error) => {
-        if (!cancelled) setError(err.message)
+        if (!cancelled) dispatch({ type: 'error', message: err.message })
       })
 
     return () => {
