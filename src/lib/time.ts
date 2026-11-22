@@ -3,6 +3,11 @@ export function roundToTenths(seconds: number): number {
   return Math.round(seconds * 10) / 10
 }
 
+/** Rounds down to tenths; the epsilon absorbs float error on exact tenths (100.1*10 = 1000.9999999999999). */
+export function floorToTenths(seconds: number): number {
+  return Math.floor(seconds * 10 + 1e-9) / 10
+}
+
 /**
  * Formats seconds as `m:ss.s` (or `h:mm:ss.s` for an hour or more).
  */

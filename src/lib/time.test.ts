@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { formatTime, parseTime } from './time'
+import { floorToTenths, formatTime, parseTime } from './time'
+
+describe('floorToTenths', () => {
+  it.each([
+    [100.06, 100],
+    [100.1, 100.1],
+    [0.3, 0.3],
+    [0.29, 0.2],
+    [0, 0],
+  ])('floors %s to %s', (seconds, expected) => {
+    expect(floorToTenths(seconds)).toBe(expected)
+  })
+})
 
 describe('formatTime', () => {
   it.each([

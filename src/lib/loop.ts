@@ -1,4 +1,4 @@
-import { roundToTenths } from './time'
+import { floorToTenths, roundToTenths } from './time'
 
 export interface LoopRange {
   start: number
@@ -10,10 +10,10 @@ export const MIN_LOOP_LENGTH = 0.5
 
 /**
  * Keeps a range inside `[0, duration]` with `start` at least
- * `MIN_LOOP_LENGTH` before `end`.
+ * `MIN_LOOP_LENGTH` before `end`. The end never passes the real video length.
  */
 export function clampRange(range: LoopRange, duration: number): LoopRange {
-  const max = roundToTenths(duration)
+  const max = floorToTenths(duration)
   const end = roundToTenths(Math.min(Math.max(range.end, MIN_LOOP_LENGTH), max))
   const start = roundToTenths(Math.min(Math.max(range.start, 0), end - MIN_LOOP_LENGTH))
   return { start: Math.max(0, start), end }
