@@ -1,6 +1,6 @@
 /** A player that finished loading, tagged with the video it belongs to. */
 export interface Ready<P> {
-  videoId: string
+  videoId: string | null
   player: P
   duration: number
 }

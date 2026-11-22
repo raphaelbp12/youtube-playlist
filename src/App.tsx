@@ -20,7 +20,7 @@ function App() {
     startAt: range?.start ?? 0,
   })
   // Once the length is known, fit the range to it (whole video by default).
-  const loopRange = player ? clampRange(range ?? { start: 0, end: duration }, duration) : null
+  const loopRange = player && !error ? clampRange(range ?? { start: 0, end: duration }, duration) : null
   const playsDone = useLoop(player, loopRange, repeats)
 
   const shareParams = videoId ? buildShareParams(videoId, loopRange ?? range, repeats) : ''

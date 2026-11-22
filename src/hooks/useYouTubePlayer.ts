@@ -1,6 +1,8 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useReducer, useRef } from 'react'
 import { loadYouTubeApi } from '../lib/loadYouTubeApi'
-import { readyFor, type Ready } from '../lib/readyPlayer'
+import { needsFractionalSeek, playerStartParam } from '../lib/playerStart'
+import { initialPlayerState, playerReducer } from '../lib/playerState'
+import { readyFor } from '../lib/readyPlayer'
 
 const ERROR_MESSAGES: Record<number, string> = {
   2: 'That video ID is not valid.',
@@ -22,8 +24,7 @@ interface Options {
  */
 export function useYouTubePlayer({ videoId, startAt }: Options) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [ready, setReady] = useState<Ready<YT.Player> | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [state, dispatch] = useReducer(playerReducer, initialPlayerState)
 
   // Only read when a new video loads, so it doesn't recreate the player.
   const getStartAt = useEffectEvent(() => startAt)
@@ -34,12 +35,12 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
 
     let cancelled = false
     let instance: YT.Player | null = null
-    setReady(null)
-    setError(null)
+    dispatch({ type: 'reset' })
 
     loadYouTubeApi()
       .then((api) => {
         if (cancelled) return
+        const initialStart = getStartAt()
         // The API replaces this element with an iframe, so React must not own it.
         const target = document.createElement('div')
         container.append(target)
@@ -47,26 +48,33 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
           videoId,
           width: '100%',
           height: '100%',
-          playerVars: { playsinline: 1, start: Math.floor(getStartAt()) },
+          playerVars: { playsinline: 1, start: playerStartParam(initialStart) },
           events: {
             onReady: (event) => {
               if (cancelled) return
               const length = event.target.getDuration()
               if (length > 0) {
-                setReady({ videoId, player: event.target, duration: length })
+                if (needsFractionalSeek(initialStart)) event.target.seekTo(initialStart, true)
+                dispatch({ type: 'ready', videoId, player: event.target, duration: length })
               } else {
-                setError('Live streams are not supported because they have no fixed length.')
+                dispatch({
+                  type: 'error',
+                  message: 'Live streams are not supported because they have no fixed length.',
+                })
               }
             },
             onError: (event) => {
               if (cancelled) return
-              setError(ERROR_MESSAGES[event.data] ?? 'This video could not be played.')
+              dispatch({
+                type: 'error',
+                message: ERROR_MESSAGES[event.data] ?? 'This video could not be played.',
+              })
             },
           },
         })
       })
       .catch((err: Error) => {
-        if (!cancelled) setError(err.message)
+        if (!cancelled) dispatch({ type: 'error', message: err.message })
       })
 
     return () => {
@@ -77,7 +85,11 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
   }, [videoId])
 
   // Ignore a player that belongs to a previous video (the reset effect runs a render late).
-  const { player, duration } = readyFor(ready, videoId)
+  const { player, duration } = readyFor(
+    state.player ? { videoId: state.videoId, player: state.player, duration: state.duration } : null,
+    videoId,
+  )
+  const { error } = state
 
   return { containerRef, player, duration, error }
 }
