@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { loadYouTubeApi } from '../lib/loadYouTubeApi'
+import { readyFor, type Ready } from '../lib/readyPlayer'
 
 const ERROR_MESSAGES: Record<number, string> = {
   2: 'That video ID is not valid.',
@@ -21,8 +22,7 @@ interface Options {
  */
 export function useYouTubePlayer({ videoId, startAt }: Options) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [player, setPlayer] = useState<YT.Player | null>(null)
-  const [duration, setDuration] = useState(0)
+  const [ready, setReady] = useState<Ready<YT.Player> | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Only read when a new video loads, so it doesn't recreate the player.
@@ -34,8 +34,7 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
 
     let cancelled = false
     let instance: YT.Player | null = null
-    setPlayer(null)
-    setDuration(0)
+    setReady(null)
     setError(null)
 
     loadYouTubeApi()
@@ -54,8 +53,7 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
               if (cancelled) return
               const length = event.target.getDuration()
               if (length > 0) {
-                setDuration(length)
-                setPlayer(event.target)
+                setReady({ videoId, player: event.target, duration: length })
               } else {
                 setError('Live streams are not supported because they have no fixed length.')
               }
@@ -77,6 +75,9 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
       container.replaceChildren()
     }
   }, [videoId])
+
+  // Ignore a player that belongs to a previous video (the reset effect runs a render late).
+  const { player, duration } = readyFor(ready, videoId)
 
   return { containerRef, player, duration, error }
 }
