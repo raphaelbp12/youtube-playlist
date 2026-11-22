@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useReducer, useRef } from 'react'
 import { loadYouTubeApi } from '../lib/loadYouTubeApi'
 import { needsFractionalSeek, playerStartParam } from '../lib/playerStart'
 import { initialPlayerState, playerReducer } from '../lib/playerState'
+import { readyFor } from '../lib/readyPlayer'
 
 const ERROR_MESSAGES: Record<number, string> = {
   2: 'That video ID is not valid.',
@@ -23,7 +24,7 @@ interface Options {
  */
 export function useYouTubePlayer({ videoId, startAt }: Options) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [{ player, duration, error }, dispatch] = useReducer(playerReducer, initialPlayerState)
+  const [state, dispatch] = useReducer(playerReducer, initialPlayerState)
 
   // Only read when a new video loads, so it doesn't recreate the player.
   const getStartAt = useEffectEvent(() => startAt)
@@ -54,7 +55,7 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
               const length = event.target.getDuration()
               if (length > 0) {
                 if (needsFractionalSeek(initialStart)) event.target.seekTo(initialStart, true)
-                dispatch({ type: 'ready', player: event.target, duration: length })
+                dispatch({ type: 'ready', videoId, player: event.target, duration: length })
               } else {
                 dispatch({
                   type: 'error',
@@ -82,6 +83,13 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
       container.replaceChildren()
     }
   }, [videoId])
+
+  // Ignore a player that belongs to a previous video (the reset effect runs a render late).
+  const { player, duration } = readyFor(
+    state.player ? { videoId: state.videoId, player: state.player, duration: state.duration } : null,
+    videoId,
+  )
+  const { error } = state
 
   return { containerRef, player, duration, error }
 }
