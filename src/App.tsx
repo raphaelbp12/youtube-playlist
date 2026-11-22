@@ -4,7 +4,7 @@ import { LoopControls } from './components/LoopControls'
 import { UrlForm } from './components/UrlForm'
 import { useLoop } from './hooks/useLoop'
 import { useYouTubePlayer } from './hooks/useYouTubePlayer'
-import { clampRange, type LoopRange } from './lib/loop'
+import { clampRange, shouldSeekToStart, type LoopRange } from './lib/loop'
 import { buildShareParams, readShareParams } from './lib/shareUrl'
 
 const initial = readShareParams(window.location.search)
@@ -32,8 +32,12 @@ function App() {
 
   // Jump to the new start whenever the user moves it, so they hear the loop point.
   const committedStart = useRef(range?.start)
+  // Seed it once the range is known, so an end-only change doesn't count as a start change.
+  useEffect(() => {
+    if (loopRange && committedStart.current === undefined) committedStart.current = loopRange.start
+  }, [loopRange])
   const handleChangeEnd = (next: LoopRange) => {
-    if (next.start !== committedStart.current) player?.seekTo(next.start, true)
+    if (shouldSeekToStart(committedStart.current, next.start)) player?.seekTo(next.start, true)
     committedStart.current = next.start
   }
 

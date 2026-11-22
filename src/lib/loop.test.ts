@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampRange, clampRepeats, finishPlay, hasReachedEnd } from './loop'
+import { clampRange, clampRepeats, finishPlay, hasReachedEnd, shouldSeekToStart } from './loop'
 
 describe('clampRange', () => {
   it('keeps a valid range', () => {
@@ -60,5 +60,20 @@ describe('hasReachedEnd', () => {
 
   it('is false for other states', () => {
     expect(hasReachedEnd('other', 50, 20)).toBe(false)
+  })
+})
+
+describe('shouldSeekToStart', () => {
+  it('does not seek before the start is known', () => {
+    expect(shouldSeekToStart(undefined, 0)).toBe(false)
+  })
+
+  it('does not seek when the start is unchanged', () => {
+    expect(shouldSeekToStart(0, 0)).toBe(false)
+    expect(shouldSeekToStart(12, 12)).toBe(false)
+  })
+
+  it('seeks when the start changed', () => {
+    expect(shouldSeekToStart(0, 12)).toBe(true)
   })
 })

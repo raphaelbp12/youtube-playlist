@@ -47,3 +47,8 @@ export function finishPlay(playsDone: number, repeats: number): number {
 export function hasReachedEnd(state: 'playing' | 'ended' | 'other', time: number, end: number): boolean {
   return state === 'ended' || (state === 'playing' && time >= end)
 }
+
+/** Whether moving the start knob to `next` should seek. `committed` is undefined until the range is known. */
+export function shouldSeekToStart(committed: number | undefined, next: number): boolean {
+  return committed !== undefined && next !== committed
+}
