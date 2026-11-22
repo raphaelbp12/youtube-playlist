@@ -10,6 +10,16 @@ describe('clampRange', () => {
     expect(clampRange({ start: -5, end: Infinity }, 100.04)).toEqual({ start: 0, end: 100 })
   })
 
+  it('never lets the end pass the real video length', () => {
+    expect(clampRange({ start: 0, end: Infinity }, 100.06)).toEqual({ start: 0, end: 100 })
+    expect(clampRange({ start: 0, end: Infinity }, 100.1).end).toBe(100.1)
+    expect(clampRange({ start: 0, end: Infinity }, 100).end).toBe(100)
+    expect(clampRange({ start: 0, end: 500 }, 100.06).end).toBe(100)
+    for (const d of [100.01, 100.05, 100.06, 100.09, 0.7, 59.99]) {
+      expect(clampRange({ start: 0, end: Infinity }, d).end).toBeLessThanOrEqual(d)
+    }
+  })
+
   it('keeps start at least half a second before end', () => {
     expect(clampRange({ start: 20, end: 20 }, 100)).toEqual({ start: 19.5, end: 20 })
     expect(clampRange({ start: 50, end: 10 }, 100)).toEqual({ start: 9.5, end: 10 })
