@@ -25,6 +25,12 @@ npm run lint     # oxlint
 npm run build    # type-check and build to dist/
 ```
 
+## Testing
+
+Unit tests use [Vitest](https://vitest.dev) and run with `npm test`
+(single run) or `npm run test:watch` (re-runs on file changes). CI runs them
+on every pull request.
+
 ## Deployment
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint, tests and build on
