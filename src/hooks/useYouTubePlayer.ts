@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useReducer, useRef } from 'react'
 import { loadYouTubeApi } from '../lib/loadYouTubeApi'
+import { needsFractionalSeek, playerStartParam } from '../lib/playerStart'
 import { initialPlayerState, playerReducer } from '../lib/playerState'
 
 const ERROR_MESSAGES: Record<number, string> = {
@@ -38,6 +39,7 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
     loadYouTubeApi()
       .then((api) => {
         if (cancelled) return
+        const initialStart = getStartAt()
         // The API replaces this element with an iframe, so React must not own it.
         const target = document.createElement('div')
         container.append(target)
@@ -45,12 +47,13 @@ export function useYouTubePlayer({ videoId, startAt }: Options) {
           videoId,
           width: '100%',
           height: '100%',
-          playerVars: { playsinline: 1, start: Math.floor(getStartAt()) },
+          playerVars: { playsinline: 1, start: playerStartParam(initialStart) },
           events: {
             onReady: (event) => {
               if (cancelled) return
               const length = event.target.getDuration()
               if (length > 0) {
+                if (needsFractionalSeek(initialStart)) event.target.seekTo(initialStart, true)
                 dispatch({ type: 'ready', player: event.target, duration: length })
               } else {
                 dispatch({
