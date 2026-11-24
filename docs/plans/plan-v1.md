@@ -27,8 +27,10 @@ In scope: `CONTRIBUTING.md`. Review gate: every documented command must be run l
 
 | Phase | Title | Status | Dependencies | File |
 | --- | --- | --- | --- | --- |
-| 1 | Write CONTRIBUTING.md | pending | none | [phase-1.md](phase-1.md) |
+| 1 | Write CONTRIBUTING.md | complete | none | [phase-1.md](phase-1.md) |
 
 ## Phase 1 - Write CONTRIBUTING.md
 
-- 1.1 - Write CONTRIBUTING.md - pending - no dependencies.
+- 1.1 - Write CONTRIBUTING.md - complete - no dependencies.
+
+Outcome: `CONTRIBUTING.md` documents install, run once, watch mode and single-file test commands.
