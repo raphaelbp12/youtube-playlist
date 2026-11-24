@@ -4,4 +4,4 @@
 
 | Plan | Phases | Status | Link |
 | --- | --- | --- | --- |
-| 1 | 1 | drafted | [plan-v1.md](plan-v1.md) |
+| 1 | 1 | complete | [plan-v1.md](plan-v1.md) |
